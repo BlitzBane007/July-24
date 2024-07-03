@@ -1,0 +1,5 @@
+2024-07-03 21:00:31,985:ERROR:An error occurred: [WinError 183] Cannot create a file when that file already exists: '03-07-2024'
+Traceback (most recent call last):
+  File "C:\Users\Aditya.Apte\OneDrive - FE fundinfo\Desktop\Desktop Icons\Aditya Apte\PyCharmProjects\AdityaProjectSpace\AERO.py", line 756, in compile_trinity
+    os.mkdir(formatted_date)
+FileExistsError: [WinError 183] Cannot create a file when that file already exists: '03-07-2024'

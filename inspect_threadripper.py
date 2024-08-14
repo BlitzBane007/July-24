@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 def browse_file():
     global csv_file_path
-    filename = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+    filename = filedialog.askopenfilename()
     if filename:
         csv_file_path.set(filename)
 

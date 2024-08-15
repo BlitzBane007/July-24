@@ -27,6 +27,7 @@ def log_message(message):
     with open(log_file_path, 'a') as log_file:
         log_file.write(formatted_datetime + ' - ' + str(message) + '\n')
 
+
 def get_user():
     global user_path, EXCEL
     # user_path = input("Please enter the OneDrive Path to 'FSQtoEFS'\nUser Path:")

@@ -1,7 +1,6 @@
 # AERO - Automation Engine for Routine Operations
 import os
 import time
-
 import requests
 import pandas as pd
 import shutil
@@ -14,7 +13,6 @@ import calendar
 import webbrowser
 import logging
 TIMEOUT_DURATION = 30
-
 # Configure logging
 logging.basicConfig(filename='error.log', level=logging.ERROR, format='%(asctime)s:%(levelname)s:%(message)s')
 
@@ -76,23 +74,23 @@ def get_user_path():
     AIM = os.path.join(user_path, 'AIM')
     BF = os.path.join(user_path, 'BF')
     EXCEL = os.path.join(user_path, 'AUTOMATE.xlsx')
-    # ARCHIVE = os.path.join(user_path, 'ARCHIVE')
-    # PROD = os.path.join(user_path, 'PROD')
-    # CT = os.path.join(user_path, 'CT')
-    # PREP = os.path.join(user_path, 'PREP')
-    # PREP_PREP_DCR_BANKDATA = os.path.join(user_path, r'PREP\PREP_DCR_BANKDATA')
-    # PREP_PREP_DCR_CARNEGIE = os.path.join(user_path, r'PREP\PREP_DCR_CARNEGIE')
-    # PREP_PREP_DCR_DANSKEBANK = os.path.join(user_path, r'PREP\PREP_DCR_DANSKEBANK')
-    # PREP_PREP_DCR_SDC = os.path.join(user_path, r'PREP\PREP_DCR_SDC')
-    # PREP_PREP_FILES = os.path.join(user_path, r'PREP\PREP_FILES')
-    # PREP_PREP_Team_Trigger = os.path.join(user_path, r'PREP\PREP_Team_Trigger')
-    # PROD_PROD_DCR_BANKDATA = os.path.join(user_path, r'PROD\PROD_DCR_BANKDATA')
-    # PROD_PROD_DCR_CARNEGIE = os.path.join(user_path, r'PROD\PROD_DCR_CARNEGIE')
-    # PROD_PROD_DCR_DANSKEBANK = os.path.join(user_path, r'PROD\PROD_DCR_DANSKEBANK')
-    # PROD_PROD_DCR_SDC = os.path.join(user_path, r'PROD\PROD_DCR_SDC')
-    # PROD_PROD_FILES = os.path.join(user_path, r'PROD\PROD_FILES')
-    # PROD_PROD_Team_Trigger = os.path.join(user_path, r'PROD\PROD_Team_Trigger')
-    # TRINITY = os.path.join(user_path, 'TRINITY')
+    ARCHIVE = os.path.join(user_path, 'ARCHIVE')
+    PROD = os.path.join(user_path, 'PROD')
+    CT = os.path.join(user_path, 'CT')
+    PREP = os.path.join(user_path, 'PREP')
+    PREP_PREP_DCR_BANKDATA = os.path.join(user_path, r'PREP\PREP_DCR_BANKDATA')
+    PREP_PREP_DCR_CARNEGIE = os.path.join(user_path, r'PREP\PREP_DCR_CARNEGIE')
+    PREP_PREP_DCR_DANSKEBANK = os.path.join(user_path, r'PREP\PREP_DCR_DANSKEBANK')
+    PREP_PREP_DCR_SDC = os.path.join(user_path, r'PREP\PREP_DCR_SDC')
+    PREP_PREP_FILES = os.path.join(user_path, r'PREP\PREP_FILES')
+    PREP_PREP_Team_Trigger = os.path.join(user_path, r'PREP\PREP_Team_Trigger')
+    PROD_PROD_DCR_BANKDATA = os.path.join(user_path, r'PROD\PROD_DCR_BANKDATA')
+    PROD_PROD_DCR_CARNEGIE = os.path.join(user_path, r'PROD\PROD_DCR_CARNEGIE')
+    PROD_PROD_DCR_DANSKEBANK = os.path.join(user_path, r'PROD\PROD_DCR_DANSKEBANK')
+    PROD_PROD_DCR_SDC = os.path.join(user_path, r'PROD\PROD_DCR_SDC')
+    PROD_PROD_FILES = os.path.join(user_path, r'PROD\PROD_FILES')
+    PROD_PROD_Team_Trigger = os.path.join(user_path, r'PROD\PROD_Team_Trigger')
+    TRINITY = os.path.join(user_path, 'TRINITY')
     DCR_Folder_Paths = [PREP_PREP_DCR_BANKDATA, PREP_PREP_DCR_CARNEGIE, PREP_PREP_DCR_DANSKEBANK, PREP_PREP_DCR_SDC]
     # Set the folder path
     folder_paths = [

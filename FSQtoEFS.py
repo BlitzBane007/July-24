@@ -4,12 +4,13 @@ import json
 import pandas as pd
 import logging
 import datetime
+import sys
 
 TIMEOUT_DURATION = 30
 
 logging.basicConfig(filename='error.log', level=logging.ERROR, format='%(asctime)s:%(levelname)s:%(message)s')
 
-user_path = r'C:\Users\Aditya.Apte\OneDrive - FE fundinfo\Desktop\Desktop Icons\Aditya Apte\FSQtoEFS\Python'
+user_path = r'C:\Users\Aditya.Apte\OneDrive - FE fundinfo\Desktop\Desktop Icons\Aditya Apte\FSQtoEFS'
 EXCEL = ''
 
 def log_message(message):
@@ -28,7 +29,7 @@ def log_message(message):
 
 def get_user():
     global user_path, EXCEL
-    # user_path = input("Please enter the OneDrive Path to 'FSQtoEFS'\nUser Path:")
+    user_path = input("Please enter the OneDrive Path to 'FSQtoEFS'\nUser Path:")
     print("Thank you!")
     EXCEL = os.path.join(user_path, 'Masterlist.xlsx')
     print(f'Excel path built: {EXCEL}')
@@ -56,7 +57,11 @@ def get_bearer_token():
 
 
 def Create_Feeds():
-    counter = 0
+    counter = int(input("Please enter the number of iterations:"))
+    if not 1 <= counter <= 1000:
+        print("Number must be between 1 and 1000.")
+        input("Hit ENTER to Exit!")
+        sys.exit(1)
     # Read the existing Excel file into a DataFrame
     df_existing = pd.read_excel(EXCEL, dtype=str)
     # Iterate over DataFrame rows as (index, Series) pairs
@@ -182,11 +187,11 @@ def Create_Feeds():
                     df_existing.at[index, column] = str(new_value)
 
                 # Update the 'Status' column with the formula
-                ISIN_Count_formula = f'=IF(ABS(H{excel_row}-J{excel_row})<50,"YES","NO")'
+                ISIN_Count_formula = f'=ABS(H{excel_row}-J{excel_row})'
                 df_existing.at[index, 'ISIN_Count_Match'] = ISIN_Count_formula
                 Field_Count_formula = f'=IF(I{excel_row}=K{excel_row},"YES","NO")'
                 df_existing.at[index, 'Field_Count_Match'] = Field_Count_formula
-                status_formula = f'=IF(AND(L{excel_row}="YES",M{excel_row}="YES",N{excel_row}="null",O{excel_row}="null",P{excel_row}="null",Q{excel_row}="True"),"RFR","Failed")'
+                status_formula = f'=IF(AND(M{excel_row}="YES",N{excel_row}="null",O{excel_row}="null",P{excel_row}="null",Q{excel_row}="True"),"RFR","Failed")'
                 df_existing.at[index, 'Status'] = status_formula
 
             except Exception as e:

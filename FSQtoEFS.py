@@ -78,7 +78,7 @@ def Create_Feeds():
             print("=============================")
             print(f"EXECUTING SUB_ID : {Sub_ID}")
             feed_type = row['Feed_Type']
-            url = f"https://fsqtoefsmigrationtooleuwliv.azurewebsites.net/FSQMigration?subscriptionId={Sub_ID}&feedDataTypeToBeOnbaoarded={feed_type}&isUploadCustomUnits=false"
+            url = f'https://fsqtoefsmigrationtooleuwliv.azurewebsites.net/FSQMigration?subscriptionId={Sub_ID}&feedDataTypeToBeOnbaoarded={feed_type}&isUploadCustomUnits=false'
             headers = {"accept": "*/*"}
             print("Posting Request to Server")
             print("Waiting for Response")

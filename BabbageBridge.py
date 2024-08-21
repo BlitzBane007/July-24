@@ -517,7 +517,7 @@ def Script_Run():
             if cell_fsq_filename_syntax.startswith('DEFAULT:'):
                 cell_fsq_filename_complex = cell_fsq_filename_syntax.replace('DEFAULT: ', '').replace('CdEchantAbont',
                                                                                                       cell_fsq_filename_substr)
-                cell_fsq_filename_complex = cell_fsq_filename_complex.replace('-yyyyMMddHHmmss-', '{yyyyMMddHHmmss}-')
+                cell_fsq_filename_complex = cell_fsq_filename_complex.replace('-yyyyMMddHHmmss-', '-{yyyyMMddHHmmss}-')
                 if 'IdDiffus.SuffixFich' in cell_fsq_filename_complex:
                     cell_fsq_filename_complex = cell_fsq_filename_complex.replace('IdDiffus.SuffixFich', '{feedid}')
                 if 'IdDiffus' in cell_fsq_filename_complex:

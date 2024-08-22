@@ -6,6 +6,7 @@ import datetime
 import sys
 import openpyxl
 import xml.etree.ElementTree as ET
+import ast
 
 TIMEOUT_DURATION = 30
 
@@ -37,6 +38,7 @@ Swag_compressed = ''
 Swag_schedules = ''
 Swag_hour = ''
 Swag_minute = ''
+Swag_time = ''
 Swag_days = ''
 Swag_alternative_email = ''
 Swag_sender_email = ''
@@ -107,7 +109,7 @@ def get_user():
 #     wb.save(EXCEL)
 
 def Script_Run():
-    global TRACKER, Swag_sub_id, Swag_feed_type, Swag_dump_type, Swag_perm_cont_id, Swag_feed_id, Swag_complexity, Swag_recpt_name, Swag_recpt_creation_failed, Swag_recpt_status_code, Swag_diss_creation_passed, Swag_sub_proj_creation_passed, Swag_fsq_filename_syntax, Swag_fsq_filename_substr, Swag_fsq_filename_complex, Swag_encoding, Swag_delimiter, Swag_file_type, Swag_delivery_type, Swag_path, Swag_host, Swag_port, Swag_username, Swag_password, Swag_recpt_count, Swag_compressed, Swag_schedules, Swag_hour, Swag_minute, Swag_days, Swag_alternative_email, Swag_sender_email, Swag_include_attachment
+    global TRACKER, Swag_sub_id, Swag_feed_type, Swag_dump_type, Swag_perm_cont_id, Swag_feed_id, Swag_complexity, Swag_recpt_name, Swag_recpt_creation_failed, Swag_recpt_status_code, Swag_diss_creation_passed, Swag_sub_proj_creation_passed, Swag_fsq_filename_syntax, Swag_fsq_filename_substr, Swag_fsq_filename_complex, Swag_encoding, Swag_delimiter, Swag_file_type, Swag_delivery_type, Swag_path, Swag_host, Swag_port, Swag_username, Swag_password, Swag_recpt_count, Swag_compressed, Swag_schedules, Swag_hour, Swag_minute, Swag_days, Swag_alternative_email, Swag_sender_email, Swag_include_attachment, Swag_time
 
     run_count = 0
     counter = int(input("Please enter the number of iterations:"))
@@ -140,6 +142,10 @@ def Script_Run():
                 return col[0].column
         return None
 
+    def time_to_minutes(time):
+        hours, minutes = map(int, time.split(':'))
+        return hours * 60 + minutes
+
     def get_EFS_bearer_token():
         log_message("Getting Bearer Token!")
         url = 'https://auth.fefundinfo.com/connect/token'
@@ -161,8 +167,7 @@ def Script_Run():
             exit(1)
 
     def Search_Feed(input_feed_type, input_searchterm):
-        global Swag_sub_id, Swag_feed_type, Swag_dump_type, Swag_perm_cont_id, Swag_feed_id, Swag_complexity, Swag_recpt_name, Swag_recpt_creation_failed, Swag_recpt_status_code, Swag_diss_creation_passed, Swag_sub_proj_creation_passed, Swag_fsq_filename_syntax, Swag_fsq_filename_substr, Swag_fsq_filename_complex, Swag_encoding, Swag_delimiter, Swag_file_type, Swag_delivery_type, Swag_path, Swag_host, Swag_port, Swag_username, Swag_password, Swag_recpt_count, Swag_compressed, Swag_schedules, Swag_hour, Swag_minute, Swag_days, Swag_alternative_email, Swag_sender_email, Swag_include_attachment
-
+        global Swag_sub_id, Swag_feed_type, Swag_dump_type, Swag_perm_cont_id, Swag_feed_id, Swag_complexity, Swag_recpt_name, Swag_recpt_creation_failed, Swag_recpt_status_code, Swag_diss_creation_passed, Swag_sub_proj_creation_passed, Swag_fsq_filename_syntax, Swag_fsq_filename_substr, Swag_fsq_filename_complex, Swag_encoding, Swag_delimiter, Swag_file_type, Swag_delivery_type, Swag_path, Swag_host, Swag_port, Swag_username, Swag_password, Swag_recpt_count, Swag_compressed, Swag_schedules, Swag_hour, Swag_minute, Swag_days, Swag_alternative_email, Swag_sender_email, Swag_include_attachment,Swag_time
         log_message(f"Searching Feed: {input_searchterm}")
         url = f"https://datafeeds.fefundinfo.com/api/v1/Feeds/search"
         headers = {
@@ -194,7 +199,7 @@ def Script_Run():
             log_message(f"SEARCH Request failed with status code {response.status_code}: {response.text}")
 
     def Trigger_FSQ_Diss(input_feed_id, input_sub_id):
-        global Swag_sub_id, Swag_feed_type, Swag_dump_type, Swag_perm_cont_id, Swag_feed_id, Swag_complexity, Swag_recpt_name, Swag_recpt_creation_failed, Swag_recpt_status_code, Swag_diss_creation_passed, Swag_sub_proj_creation_passed, Swag_fsq_filename_syntax, Swag_fsq_filename_substr, Swag_fsq_filename_complex, Swag_encoding, Swag_delimiter, Swag_file_type, Swag_delivery_type, Swag_path, Swag_host, Swag_port, Swag_username, Swag_password, Swag_recpt_count, Swag_compressed, Swag_schedules, Swag_hour, Swag_minute, Swag_days, Swag_alternative_email, Swag_sender_email, Swag_include_attachment
+        global Swag_sub_id, Swag_feed_type, Swag_dump_type, Swag_perm_cont_id, Swag_feed_id, Swag_complexity, Swag_recpt_name, Swag_recpt_creation_failed, Swag_recpt_status_code, Swag_diss_creation_passed, Swag_sub_proj_creation_passed, Swag_fsq_filename_syntax, Swag_fsq_filename_substr, Swag_fsq_filename_complex, Swag_encoding, Swag_delimiter, Swag_file_type, Swag_delivery_type, Swag_path, Swag_host, Swag_port, Swag_username, Swag_password, Swag_recpt_count, Swag_compressed, Swag_schedules, Swag_hour, Swag_minute, Swag_days, Swag_alternative_email, Swag_sender_email, Swag_include_attachment,Swag_time
         log_message("Running Swagger Script")
         url = f"https://fsqtoefsmigrationtooleuwliv.azurewebsites.net/FSQMigration/CreateOrUpdateDissemination?feedId={input_feed_id}&subscriptionId={input_sub_id}"
         headers = {
@@ -226,7 +231,7 @@ def Script_Run():
             return False
 
     def Get_Feed_Details(input_feed_id):
-        global Swag_sub_id, Swag_feed_type, Swag_dump_type, Swag_perm_cont_id, Swag_feed_id, Swag_complexity, Swag_recpt_name, Swag_recpt_creation_failed, Swag_recpt_status_code, Swag_diss_creation_passed, Swag_sub_proj_creation_passed, Swag_fsq_filename_syntax, Swag_fsq_filename_substr, Swag_fsq_filename_complex, Swag_encoding, Swag_delimiter, Swag_file_type, Swag_delivery_type, Swag_path, Swag_host, Swag_port, Swag_username, Swag_password, Swag_recpt_count, Swag_compressed, Swag_schedules, Swag_hour, Swag_minute, Swag_days, Swag_alternative_email, Swag_sender_email, Swag_include_attachment
+        global Swag_sub_id, Swag_feed_type, Swag_dump_type, Swag_perm_cont_id, Swag_feed_id, Swag_complexity, Swag_recpt_name, Swag_recpt_creation_failed, Swag_recpt_status_code, Swag_diss_creation_passed, Swag_sub_proj_creation_passed, Swag_fsq_filename_syntax, Swag_fsq_filename_substr, Swag_fsq_filename_complex, Swag_encoding, Swag_delimiter, Swag_file_type, Swag_delivery_type, Swag_path, Swag_host, Swag_port, Swag_username, Swag_password, Swag_recpt_count, Swag_compressed, Swag_schedules, Swag_hour, Swag_minute, Swag_days, Swag_alternative_email, Swag_sender_email, Swag_include_attachment,Swag_time
         log_message("Getting Feed Details")
         url = f"https://datafeeds.fefundinfo.com/api/v1/Feeds/{input_feed_id}"
         headers = {
@@ -251,7 +256,6 @@ def Script_Run():
             Swag_username = data["payload"]["deliverySettings"].get("userName", "")  # feed details
             Swag_password = data["payload"]["deliverySettings"].get("password", "")  # feed details
             Swag_compressed = data["payload"]["deliverySettings"].get("unZip", "")  # feed details
-            print(f'Swag Compressed Value: {Swag_compressed}')
             if Swag_compressed:
                 Swag_compressed = "NO"
             else:
@@ -259,6 +263,7 @@ def Script_Run():
             Swag_schedules = data["payload"]["deliverySettings"].get("frequency", "")  # feed details
             Swag_hour = data["payload"]["deliverySettings"].get("hour", "")  # feed details
             Swag_minute = data["payload"]["deliverySettings"].get("minutes", "")  # feed details
+            Swag_time = data["payload"]["deliverySettings"].get("time", "")  # feed details
             Swag_days = data["payload"]["deliverySettings"].get("day", "")  # feed details
             Swag_alternative_email = data["payload"]["deliverySettings"].get("useAlternativeEmailAddress",
                                                                              "")  # feed details
@@ -273,7 +278,7 @@ def Script_Run():
             log_message(f"Request failed with status code {response.status_code}: {response.text}")
 
     def Get_Diss_Details(input_feed_id):
-        global Swag_sub_id, Swag_feed_type, Swag_dump_type, Swag_perm_cont_id, Swag_feed_id, Swag_complexity, Swag_recpt_name, Swag_recpt_creation_failed, Swag_recpt_status_code, Swag_diss_creation_passed, Swag_sub_proj_creation_passed, Swag_fsq_filename_syntax, Swag_fsq_filename_substr, Swag_fsq_filename_complex, Swag_encoding, Swag_delimiter, Swag_file_type, Swag_delivery_type, Swag_path, Swag_host, Swag_port, Swag_username, Swag_password, Swag_recpt_count, Swag_compressed, Swag_schedules, Swag_hour, Swag_minute, Swag_days, Swag_alternative_email, Swag_sender_email, Swag_include_attachment
+        global Swag_sub_id, Swag_feed_type, Swag_dump_type, Swag_perm_cont_id, Swag_feed_id, Swag_complexity, Swag_recpt_name, Swag_recpt_creation_failed, Swag_recpt_status_code, Swag_diss_creation_passed, Swag_sub_proj_creation_passed, Swag_fsq_filename_syntax, Swag_fsq_filename_substr, Swag_fsq_filename_complex, Swag_encoding, Swag_delimiter, Swag_file_type, Swag_delivery_type, Swag_path, Swag_host, Swag_port, Swag_username, Swag_password, Swag_recpt_count, Swag_compressed, Swag_schedules, Swag_hour, Swag_minute, Swag_days, Swag_alternative_email, Swag_sender_email, Swag_include_attachment,Swag_time
         log_message("Getting Dis Details")
         url = f"https://datafeeds.fefundinfo.com/api/v1/Feeds/{input_feed_id}/disseminationFeed"
         headers = {
@@ -377,6 +382,7 @@ def Script_Run():
     tracker_recpt_count_match = "Recpt_Count_Match"
     tracker_compressed_match = "Compressed_Match"
     tracker_schedules_match = "Schedules_Match"
+    tracker_days_match = "Days_Match"
     tracker_time_match = "Time_Match"
     tracker_alternative_email_match = "Alternative_Email_Match"
     tracker_sender_email_match = "Sender_Email_Match"
@@ -407,6 +413,7 @@ def Script_Run():
     tracker_idx_recpt_count_match = get_tracker_index_by_header(tracker_recpt_count_match)
     tracker_idx_compressed_match = get_tracker_index_by_header(tracker_compressed_match)
     tracker_idx_schedules_match = get_tracker_index_by_header(tracker_schedules_match)
+    tracker_idx_days_match = get_tracker_index_by_header(tracker_days_match)
     tracker_idx_time_match = get_tracker_index_by_header(tracker_time_match)
     tracker_idx_alternative_email_match = get_tracker_index_by_header(tracker_alternative_email_match)
     tracker_idx_sender_email_match = get_tracker_index_by_header(tracker_sender_email_match)
@@ -492,6 +499,7 @@ def Script_Run():
             Tracker_recpt_count_match_value = wst.cell(row=track_row, column=tracker_idx_recpt_count_match)
             Tracker_compressed_match_value = wst.cell(row=track_row, column=tracker_idx_compressed_match)
             Tracker_schedules_match_value = wst.cell(row=track_row, column=tracker_idx_schedules_match)
+            Tracker_days_match_value = wst.cell(row=track_row, column=tracker_idx_days_match)
             Tracker_time_match_value = wst.cell(row=track_row, column=tracker_idx_time_match)
             Tracker_alternative_email_match_value = wst.cell(row=track_row, column=tracker_idx_alternative_email_match)
             Tracker_sender_email_match_value = wst.cell(row=track_row, column=tracker_idx_sender_email_match)
@@ -567,6 +575,32 @@ def Script_Run():
                 if swag_delivery_type is not None:
                     cell_delivery_type = swag_delivery_type
 
+            # Days Mapping Here
+            days_map = {
+                "Daily (week-ends excluded)": "['1', '2', '3', '4', '5']",
+                "Weekly days: Mon,Tue,Wed,Thu,Fri": "['1', '2', '3', '4', '5']",
+                "Monthly : 21": "[21]",
+                "Monthly : 2": "[2]",
+                "Weekly days: Mon": "[1]",
+                "Monthly : 5": "[5]",
+                "Monthly : 15": "[15]",
+                "Weekly days: Tue,Wed,Thu,Fri": "['2', '3', '4', '5']",
+                "Weekly days: Mon,Tue,Wed,Thu,Fri,Sat": "['1', '2', '3', '4', '5', '6']",
+                "Weekly days: Mon,Tue,Wed,Thu": "['1', '2', '3', '4']",
+                "Monthly : 1": "[1]",
+                "Monthly : 3, 7": "['3', '7']",
+                "Weekly days: Wed": "[3]",
+                "Weekly days: Thu": "[4]",
+                "Weekly days: Sat": "[6]"
+            }
+            swag_days = days_map.get(cell_schedules)
+
+            if swag_days is not None:
+                cell_days = swag_days
+                if len(cell_days) > 4:
+                    cell_days = ast.literal_eval(cell_days)
+
+
             # Schedules Mapping Here
             schedules_map = {
                 "Daily (week-ends excluded)": 2,
@@ -591,28 +625,15 @@ def Script_Run():
             if swag_schedules is not None:
                 cell_schedules = swag_schedules
 
-            # Days Mapping Here
-            days_map = {
-                "Daily (week-ends excluded)": "[1,2,3,4,5]",
-                "Weekly days: Mon,Tue,Wed,Thu,Fri": "[1,2,3,4,5]",
-                "Monthly : 21": "[21]",
-                "Monthly : 2": "[2]",
-                "Weekly days: Mon": "[1]",
-                "Monthly : 5": "[5]",
-                "Monthly : 15": "[15]",
-                "Weekly days: Tue,Wed,Thu,Fri": "[2,3,4,5]",
-                "Weekly days: Mon,Tue,Wed,Thu,Fri,Sat": "[1,2,3,4,5,6]",
-                "Weekly days: Mon,Tue,Wed,Thu": "[1,2,3,4]",
-                "Monthly : 1": "[1]",
-                "Monthly : 3, 7": "[3,7]",
-                "Weekly days: Wed": "[3]",
-                "Weekly days: Thu": "[4]",
-                "Weekly days: Sat": "[6]"
-            }
-            swag_days = days_map.get(cell_days)
+            if len(cell_time) > 5:
+                cell_schedules = 0
+                cell_time = cell_time.split(", ")
+                cell_time = sorted(time_to_minutes(t) for t in cell_time)
 
-            if swag_days is not None:
-                cell_days = swag_days
+                cell_time = [str(minute) for minute in cell_time]
+
+
+
 
             Swag_fsq_filename_complex = ''  # feed details
             Swag_perm_cont_id = ''  # feed search
@@ -650,34 +671,8 @@ def Script_Run():
             Get_Diss_Details(Swag_feed_id)
             # API CALLS END HERE
 
-            # print(f'Swag FSQ filename complex: {Swag_fsq_filename_complex}\n'
-            #       f'Swag perm cont id: {Swag_perm_cont_id}\n'
-            #       f'Swag feed id: {Swag_feed_id}\n'
-            #       f'Swag complexity: {Swag_complexity}\n'
-            #       f'Swag recpt name: {Swag_recpt_name}\n'
-            #       f'Swag recpt creation failed: {Swag_recpt_creation_failed}\n'
-            #       f'Swag recpt status code: {Swag_recpt_status_code}\n'
-            #       f'Swag diss creation passed: {Swag_diss_creation_passed}\n'
-            #       f'Swag sub proj creation passed: {Swag_sub_proj_creation_passed}\n'
-            #       f'Swag encoding: {Swag_encoding}\n'
-            #       f'Swag delimiter: {Swag_delimiter}\n'
-            #       f'Swag file type: {Swag_file_type}\n'
-            #       f'Swag delivery type: {Swag_delivery_type}\n'
-            #       f'Swag path: {Swag_path}\n'
-            #       f'Swag host: {Swag_host}\n'
-            #       f'Swag port: {Swag_port}\n'
-            #       f'Swag username: {Swag_username}\n'
-            #       f'Swag password: {Swag_password}\n'
-            #       f'Swag recpt count: {Swag_recpt_count}\n'
-            #       f'Swag compressed: {Swag_compressed}\n'
-            #       f'Swag schedules: {Swag_schedules}\n'
-            #       f'Swag hour: {Swag_hour}\n'
-            #       f'Swag minutes: {Swag_minute}\n'
-            #       f'Swag day: {Swag_days}\n'
-            #       f'Swag alternative email: {Swag_alternative_email}\n'
-            #       f'Swag sender email: {Swag_sender_email}\n'
-            #       f'Swag include attachment: {Swag_include_attachment}')
-            Swag_time = f'{Swag_hour:02}:{Swag_minute:02}:00'
+            if Swag_schedules != 0:
+                Swag_time = f'{Swag_hour:02}:{Swag_minute:02}:00'
             print("=====================================================")
             print("=====================================================")
             print("STARTING COMPARISON")
@@ -693,89 +688,6 @@ def Script_Run():
             Tracker_diss_creation_passed_value.value = Swag_diss_creation_passed
             Tracker_sub_proj_creation_passed_value.value = Swag_sub_proj_creation_passed
 
-            # if cell_fsq_filename_complex == Swag_fsq_filename_complex:
-            #     Tracker_fsq_filename_complex_match_value.value = "True"
-            # else:
-            #     Tracker_fsq_filename_complex_match_value.value = "False"
-            # if cell_encoding == Swag_encoding:
-            #     Tracker_encoding_match_value.value = "True"
-            # else:
-            #     Tracker_encoding_match_value.value = "False"
-            #
-            # if cell_delimiter == Swag_delimiter:
-            #     Tracker_delimiter_match_value.value = "True"
-            # else:
-            #     Tracker_delimiter_match_value.value = "False"
-            #
-            # if cell_file_type == Swag_file_type:
-            #     Tracker_file_type_match_value.value = "True"
-            # else:
-            #     Tracker_file_type_match_value.value = "False"
-            #
-            # if cell_delivery_type == Swag_delivery_type:
-            #     Tracker_delivery_type_match_value.value = "True"
-            # else:
-            #     Tracker_delivery_type_match_value.value = "False"
-            #
-            # if cell_path == Swag_path:
-            #     Tracker_path_match_value.value = "True"
-            # else:
-            #     Tracker_path_match_value.value = "False"
-            #
-            # if cell_host == Swag_host:
-            #     Tracker_host_match_value.value = "True"
-            # else:
-            #     Tracker_host_match_value.value = "False"
-            #
-            # if cell_port == Swag_port:
-            #     Tracker_port_match_value.value = "True"
-            # else:
-            #     Tracker_port_match_value.value = "False"
-            #
-            # if cell_username == Swag_username:
-            #     Tracker_username_match_value.value = "True"
-            # else:
-            #     Tracker_username_match_value.value = "False"
-            #
-            # if cell_password == Swag_password:
-            #     Tracker_password_match_value.value = "True"
-            # else:
-            #     Tracker_password_match_value.value = "False"
-            #
-            # if cell_recpt_count == Swag_recpt_count:
-            #     Tracker_recpt_count_match_value.value = "True"
-            # else:
-            #     Tracker_recpt_count_match_value.value = "False"
-            #
-            # if cell_compressed == Swag_compressed:
-            #     Tracker_compressed_match_value.value = "True"
-            # else:
-            #     Tracker_compressed_match_value.value = "False"
-            #
-            # if cell_schedules == Swag_schedules:
-            #     Tracker_schedules_match_value.value = "True"
-            # else:
-            #     Tracker_schedules_match_value.value = "False"
-            #
-            # if cell_time == Swag_time:
-            #     Tracker_time_match_value.value = "True"
-            # else:
-            #     Tracker_time_match_value.value = "False"
-            #
-            # if cell_alternative_email == Swag_alternative_email:
-            #     Tracker_alternative_email_match_value.value = "True"
-            # else:
-            #     Tracker_alternative_email_match_value.value = "False"
-            #
-            # if cell_sender_email == Swag_sender_email:
-            #     Tracker_sender_email_match_value.value = "True"
-            # else:
-            #     Tracker_sender_email_match_value.value = "False"
-            #
-            # if cell_include_attachment == Swag_include_attachment:
-            #     Tracker_include_attachment_match_value.value = "True"
-            # else:
-            #     Tracker_include_attachment_match_value.value = "False"
 
             trackers = [
                 ('filename', cell_fsq_filename_complex, Swag_fsq_filename_complex,
@@ -792,6 +704,7 @@ def Script_Run():
                 ('recpt_count', cell_recpt_count, Swag_recpt_count, Tracker_recpt_count_match_value),
                 ('compressed', cell_compressed, Swag_compressed, Tracker_compressed_match_value),
                 ('schedules', cell_schedules, Swag_schedules, Tracker_schedules_match_value),
+                ('days', cell_days, Swag_days, Tracker_days_match_value),
                 ('time', cell_time, Swag_time, Tracker_time_match_value),
                 ('alternative_email', cell_alternative_email, Swag_alternative_email,
                  Tracker_alternative_email_match_value),
@@ -801,8 +714,9 @@ def Script_Run():
             ]
 
             for heading, cell_value, swag_value, tracker in trackers:
-                print(f"{heading}:\n{cell_value}\n{swag_value}\n================")
+
                 tracker.value = "True" if cell_value == swag_value else "False"
+                print(f"{heading}:\n{cell_value}\n{swag_value}\n{tracker.value}\n================")
 
             print("COMPARISON COMPLETED")
             track_row += 1
@@ -810,23 +724,6 @@ def Script_Run():
             print("=====================================================")
             print("=====================================================")
 
-            # Tracker_encoding_match_value.value =
-            # Tracker_delimiter_match_value.value =
-            # Tracker_file_type_match_value.value =
-            # Tracker_delivery_type_match_value.value =
-            # Tracker_path_match_value.value =
-            # Tracker_host_match_value.value =
-            # Tracker_port_match_value.value =
-            # Tracker_username_match_value.value =
-            # Tracker_password_match_value.value =
-            # Tracker_recpt_count_match_value.value =
-            # Tracker_compressed_match_value.value =
-            # Tracker_schedules_match_value.value =
-            # Tracker_time_match_value.value =
-            # Tracker_alternative_email_match_value.value =
-            # Tracker_sender_email_match_value.value =
-            # Tracker_include_attachment_match_value.value =
-            # Tracker_status_value.value =
 
 
 get_user()

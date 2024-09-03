@@ -381,15 +381,20 @@ def upload_file(file_path, permission_container_id):
     }
 
     response = requests.post(url, headers=headers, files=files)
-    response_text = json.dumps(response.json(), indent=4)  # Format JSON output
-    data = json.loads(response_text)
-    success = data['payload'].get('itemsCount', '')
-    fail = data['payload'].get('invalidItemsCount', '')
-    blob = data['payload'].get('targetBlobName', '')
-    return success, fail, blob
+
+    if response.status_code == 200:
+        response_text = json.dumps(response.json(), indent=4)  # Format JSON output
+        data = json.loads(response_text)
+        success = data['payload'].get('itemsCount', '')
+        fail = data['payload'].get('invalidItemsCount', '')
+        blob = data['payload'].get('targetBlobName', '')
+        return success, fail, blob
+    else:
+        log_message(f"UPLOAD FAILED with status code {response.status_code}: {response.text}")
 
 
 def read_feed(feed_id):
+    log_message("Reading Feed Details")
     url = f"https://datafeeds.fefundinfo.com/api/v1/Feeds/{feed_id}"
     headers = {
         'accept': 'application/json',
@@ -411,6 +416,7 @@ def read_feed(feed_id):
 
 
 def save_feed(payload):
+    log_message("Saving Feed Details")
     url = f"https://datafeeds.fefundinfo.com/api/v1/Feeds/save"
     headers = {
         'accept': 'application/json',
@@ -907,6 +913,7 @@ def teams_trigger():
             if added_isin_count == 0 and removed_isin_count == 0:
                 upload_ct_flag = 'NO'
             else:
+                log_message(f'Uploading feed for {perm_id}')
                 upload_path = UPLOAD
                 dfup = pd.read_excel(upload_path)
                 for index, row in dfup.iterrows():

@@ -1,29 +1,20 @@
 # AERO - Automation Engine for Routine Operations
-import os
-import time
-import requests
-import pandas as pd
-import shutil
-from datetime import datetime, timedelta
-import tkinter as tk
-import glob
+import calendar
 import csv
 import datetime
-import calendar
-import webbrowser
-import logging
-
-import os
-import requests
+import glob
 import json
 import logging
-import datetime
-import sys
-import openpyxl
-import xml.etree.ElementTree as ET
-import ast
+import os
+import shutil
 import time
+import tkinter as tk
 import uuid
+import webbrowser
+from datetime import datetime, timedelta
+
+import pandas as pd
+import requests
 
 TIMEOUT_DURATION = 30
 # Configure logging
@@ -394,7 +385,7 @@ def upload_file(file_path, permission_container_id):
 
 
 def read_feed(feed_id):
-    log_message("Reading Feed Details")
+    log_message(f"Feed ID: {feed_id} ")
     url = f"https://datafeeds.fefundinfo.com/api/v1/Feeds/{feed_id}"
     headers = {
         'accept': 'application/json',
@@ -416,7 +407,6 @@ def read_feed(feed_id):
 
 
 def save_feed(payload):
-    log_message("Saving Feed Details")
     url = f"https://datafeeds.fefundinfo.com/api/v1/Feeds/save"
     headers = {
         'accept': 'application/json',
@@ -882,7 +872,7 @@ def teams_trigger():
 
         # Initialize HTML content with a table
         html_content = "<html><body><table border='1'>"
-        html_content += "<tr><th>File</th><th>API</th><th>Added ISIN</th><th>Removed ISIN</th><th>CT Uploaded</th></tr>"
+        html_content += "<tr><th>File</th><th>Added ISIN</th><th>Removed ISIN</th><th>CT Uploaded</th></tr>"
         # Loop through each CSV file
         for csv_file in csv_files:
             upload_ct_flag = 'YES'
@@ -913,7 +903,7 @@ def teams_trigger():
             if added_isin_count == 0 and removed_isin_count == 0:
                 upload_ct_flag = 'NO'
             else:
-                log_message(f'Uploading feed for {perm_id}')
+                log_message(f'Uploading feed for Permission Container: {perm_id}')
                 upload_path = UPLOAD
                 dfup = pd.read_excel(upload_path)
                 for index, row in dfup.iterrows():
@@ -935,10 +925,11 @@ def teams_trigger():
             df = pd.read_excel(excel_path)
             for index, row in df.iterrows():
                 api = row['API']
+                feed_name = row['FeedName']
                 per_con = row['Perm_Cont']
                 if csv_file == f'{per_con}.csv':
                     # Output the results
-                    html_content += f"<tr><td>{csv_file}</td><td>{api}</td><td>{added_isin_count}</td><td>{removed_isin_count}</td><td>{upload_ct_flag}</td></tr>"
+                    html_content += f"<tr><td>{feed_name}</td><td>{added_isin_count}</td><td>{removed_isin_count}</td><td>{upload_ct_flag}</td></tr>"
         html_content += "</table></body></html>"
         # Save the HTML content to a file
         with open(os.path.join(PREP_PREP_Team_Trigger, f'{today}.html'), 'w') as file:

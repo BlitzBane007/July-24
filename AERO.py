@@ -12,13 +12,27 @@ import datetime
 import calendar
 import webbrowser
 import logging
+
+import os
+import requests
+import json
+import logging
+import datetime
+import sys
+import openpyxl
+import xml.etree.ElementTree as ET
+import ast
+import time
+import uuid
+
 TIMEOUT_DURATION = 30
 # Configure logging
 logging.basicConfig(filename='error.log', level=logging.ERROR, format='%(asctime)s:%(levelname)s:%(message)s')
 
-
+token = ''
 user_path = ''
 EXCEL = ''
+UPLOAD = ''
 BF = ''
 ARCHIVE = ''
 PROD = ''
@@ -61,7 +75,7 @@ def log_message(message):
 
 
 def get_user_path():
-    global folder_paths, delete_folder_paths, user_path, BF, PROD, ARCHIVE, EXCEL, AIM, CT, PREP, \
+    global UPLOAD, folder_paths, delete_folder_paths, user_path, BF, PROD, ARCHIVE, EXCEL, AIM, CT, PREP, \
         PREP_PREP_DCR_BANKDATA, PREP_PREP_DCR_CARNEGIE, PREP_PREP_DCR_DANSKEBANK, \
         PREP_PREP_DCR_SDC, PREP_PREP_FILES, PREP_PREP_Team_Trigger, \
         PROD_PROD_DCR_BANKDATA, PROD_PROD_DCR_CARNEGIE, PROD_PROD_DCR_DANSKEBANK, \
@@ -74,6 +88,7 @@ def get_user_path():
     AIM = os.path.join(user_path, 'AIM')
     BF = os.path.join(user_path, 'BF')
     EXCEL = os.path.join(user_path, 'AUTOMATE.xlsx')
+    UPLOAD = os.path.join(user_path, 'AUTO_UPLOAD.xlsx')
     ARCHIVE = os.path.join(user_path, 'ARCHIVE')
     PROD = os.path.join(user_path, 'PROD')
     CT = os.path.join(user_path, 'CT')
@@ -97,6 +112,7 @@ def get_user_path():
         AIM,
         BF,
         EXCEL,
+        UPLOAD,
         ARCHIVE,
         PROD,
         CT,
@@ -175,7 +191,6 @@ def ready_folders():
         log_message(e)
         input("Hit Enter to Exit")
         exit(1)
-
 
 
 def download_aim():
@@ -354,6 +369,67 @@ def get_bearer_token():
         exit(1)
 
 
+def upload_file(file_path, permission_container_id):
+    global token
+    url = f'https://datafeeds.fefundinfo.com/api/v1/CustomFiles?permissionContainerId={permission_container_id}'
+    headers = {
+        'accept': 'application/json',
+        'Authorization': f'Bearer {token}'
+    }
+    files = {
+        'file': (file_path, open(file_path, 'rb'), 'text/csv')
+    }
+
+    response = requests.post(url, headers=headers, files=files)
+    response_text = json.dumps(response.json(), indent=4)  # Format JSON output
+    data = json.loads(response_text)
+    success = data['payload'].get('itemsCount', '')
+    fail = data['payload'].get('invalidItemsCount', '')
+    blob = data['payload'].get('targetBlobName', '')
+    return success, fail, blob
+
+
+def read_feed(feed_id):
+    url = f"https://datafeeds.fefundinfo.com/api/v1/Feeds/{feed_id}"
+    headers = {
+        'accept': 'application/json',
+        'Authorization': f'Bearer {token}',  # Replace YOUR_TOKEN with your actual token
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+    }
+    params = {'_': str(uuid.uuid4())}  # Generate a unique parameter to avoid caching
+    response = requests.get(url, headers=headers, params=params)
+
+    if response.status_code == 200:
+        response_text = json.dumps(response.json(), indent=4)  # Format JSON output
+        data = json.loads(response_text)
+        return data
+
+    else:
+        log_message(f"Request failed with status code {response.status_code}: {response.text}")
+
+
+def save_feed(payload):
+    url = f"https://datafeeds.fefundinfo.com/api/v1/Feeds/save"
+    headers = {
+        'accept': 'application/json',
+        'Authorization': f'Bearer {token}',  # Replace YOUR_TOKEN with your actual token
+        'Content-Type': 'application/json',
+    }
+    data = payload
+
+    response = requests.post(url, headers=headers, json=data)
+    if response.status_code == 200:
+        response_text = json.dumps(response.json(), indent=4)  # Format JSON output
+        data = json.loads(response_text)
+        Save_Status = data["payload"]["passed"]
+        print(f'Status: {Save_Status}')
+
+    else:
+        log_message(f"SAVE Request failed with status code {response.status_code}: {response.text}")
+
+
 def get_blob(url, token):
     headers = {
         'Authorization': f'Bearer {token}',
@@ -399,7 +475,7 @@ def download_file(url, token, filename, filepath):
 
 
 def populate_urls_from_excel():
-    global folder_paths, delete_folder_paths, user_path, BF, PROD, ARCHIVE, EXCEL, AIM, CT, PREP, \
+    global token, folder_paths, delete_folder_paths, user_path, BF, PROD, ARCHIVE, EXCEL, AIM, CT, PREP, \
         PREP_PREP_DCR_BANKDATA, PREP_PREP_DCR_CARNEGIE, PREP_PREP_DCR_DANSKEBANK, \
         PREP_PREP_DCR_SDC, PREP_PREP_FILES, PREP_PREP_Team_Trigger, \
         PROD_PROD_DCR_BANKDATA, PROD_PROD_DCR_CARNEGIE, PROD_PROD_DCR_DANSKEBANK, \
@@ -631,14 +707,14 @@ def compile_trinity():
                 # Remove items in removed_isins from combined_data
                 upload_data_set = [isin for isin in combined_data if isin not in removed_isin]
 
-
                 excel_path = EXCEL
                 df = pd.read_excel(excel_path)
                 for index, row in df.iterrows():
                     api = row['API']
                     feed_name = row['FeedName']
+                    perm_cont = row['Perm_Cont']
                     if api == folder:
-                        upload_path = os.path.join(PREP_PREP_FILES, f'{feed_name}.csv')
+                        upload_path = os.path.join(PREP_PREP_FILES, f'{perm_cont}.csv')
                         if flag == 1:
                             for client in DCR_Clients:
                                 if client.lower() in feed_name.lower():
@@ -693,8 +769,9 @@ def compile_trinity():
                 for index, row in df.iterrows():
                     api = row['API']
                     feed_name = row['FeedName']
+                    perm_cont = row['Perm_Cont']
                     if api == folder:
-                        upload_path = os.path.join(PREP_PREP_FILES, f'{feed_name}.csv')
+                        upload_path = os.path.join(PREP_PREP_FILES, f'{perm_cont}.csv')
 
                 # Save upload_data_set to a new file
                 print(upload_path)
@@ -729,8 +806,9 @@ def compile_trinity():
                 for index, row in df.iterrows():
                     api = row['API']
                     feed_name = row['FeedName']
+                    perm_cont = row['Perm_Cont']
                     if api == folder:
-                        upload_path = os.path.join(PREP_PREP_FILES, f'{feed_name}.csv')
+                        upload_path = os.path.join(PREP_PREP_FILES, f'{perm_cont}.csv')
 
                 # Save upload_data_set to a new file
                 print(upload_path)
@@ -770,7 +848,7 @@ def compile_trinity():
 
 def teams_trigger():
     log_message('POPULATING DATA ENTRY TABLE')
-    global folder_paths, delete_folder_paths, user_path, BF, PROD, ARCHIVE, EXCEL, AIM, \
+    global UPLOAD, folder_paths, delete_folder_paths, user_path, BF, PROD, ARCHIVE, EXCEL, AIM, \
         CT, PREP, \
         PREP_PREP_DCR_BANKDATA, PREP_PREP_DCR_CARNEGIE, PREP_PREP_DCR_DANSKEBANK, \
         PREP_PREP_DCR_SDC, PREP_PREP_FILES, PREP_PREP_Team_Trigger, \
@@ -798,10 +876,15 @@ def teams_trigger():
 
         # Initialize HTML content with a table
         html_content = "<html><body><table border='1'>"
-        html_content += "<tr><th>File</th><th>API</th><th>Added ISIN</th><th>Removed ISIN</th><th>Upload CT</th></tr>"
+        html_content += "<tr><th>File</th><th>API</th><th>Added ISIN</th><th>Removed ISIN</th><th>CT Uploaded</th></tr>"
         # Loop through each CSV file
         for csv_file in csv_files:
             upload_ct_flag = 'YES'
+            perm_id = os.path.splitext(csv_file)[0]
+            cont_upload = 0
+            success = 0
+            fail = 0
+            blob = ''
             # Construct file paths
             file_path1 = os.path.join(dir1, csv_file)
             file_path2 = os.path.join(dir2, csv_file)
@@ -823,14 +906,30 @@ def teams_trigger():
             removed_isin_count = len(removed_isin)
             if added_isin_count == 0 and removed_isin_count == 0:
                 upload_ct_flag = 'NO'
+            else:
+                upload_path = UPLOAD
+                dfup = pd.read_excel(upload_path)
+                for index, row in dfup.iterrows():
+                    perm_cont = row['Perm_Cont']
+                    feed_id = row['Feed_API']
+                    if perm_id == perm_cont:
+                        if cont_upload == 0:
+                            success, fail, blob = upload_file(file_path2, perm_id)
+                            cont_upload = 1
+                        feed_data = read_feed(feed_id)
+                        feed_data["payload"]["uploadedIdentifiersFileName"] = perm_cont
+                        feed_data["payload"]["uploadedIdentifiersSuccessCount"] = success
+                        feed_data["payload"]["uploadedIdentifiersInvalidCount"] = fail
+                        feed_data["payload"]["isinsBlobName"] = blob
+                        save_feed(feed_data['payload'])
 
             # Get the API
             excel_path = EXCEL
             df = pd.read_excel(excel_path)
             for index, row in df.iterrows():
                 api = row['API']
-                feed_name = row['FeedName']
-                if csv_file == f'{feed_name}.csv':
+                per_con = row['Perm_Cont']
+                if csv_file == f'{per_con}.csv':
                     # Output the results
                     html_content += f"<tr><td>{csv_file}</td><td>{api}</td><td>{added_isin_count}</td><td>{removed_isin_count}</td><td>{upload_ct_flag}</td></tr>"
         html_content += "</table></body></html>"
@@ -843,7 +942,6 @@ def teams_trigger():
         log_message(e)
         input("Hit Enter to Exit")
         exit(1)
-
 
 
 def move_to_prod():
@@ -891,18 +989,18 @@ file_checks()
 populate_urls_from_excel()
 clean_up()
 compile_trinity()
-teams_trigger()
 # Show the message box
-user_response_mtp = input("Please check DCR reports, Files and Teams Trigger before moving to PROD. Ready to move to PROD?\n(Y/N):").strip().upper()
+user_response_mtp = input("INITIATE UPLOAD?\n(Y/N):").strip().upper()
 # Optional: Perform actions based on the response
-if user_response_mtp == 'Y':
-    log_message("User chose 'Yes' for MOVE TO PROD condition check")
+if user_response_mtp in ('Y', 'y'):
+    log_message("User chose 'Yes' for UPLOAD condition check")
+    teams_trigger()
     move_to_prod()
+
 else:
-    log_message("User chose 'No' for MTP condition check")
+    log_message("User chose 'No' for MTP/UPLOAD condition check")
     print("Cannot continue without MOVE TO PROD")
     log_message("Abort!")
-
 
 print(r'Logs saved to C:\Output.log')
 print('AUTOMATION SCRIPT RUN SUCCESS')

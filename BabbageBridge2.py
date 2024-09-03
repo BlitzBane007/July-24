@@ -9,6 +9,7 @@ import xml.etree.ElementTree as ET
 import ast
 import time
 import uuid
+import random
 
 TIMEOUT_DURATION = 30
 
@@ -392,29 +393,6 @@ def Script_Run():
             log_message(e)
             Swag_recpt_count = 0
 
-    def Disable_Feed(input_feed_id):
-        global Swag_project_guid, Swag_sub_id, Swag_feed_type, Swag_dump_type, Swag_perm_cont_id, Swag_feed_id, Swag_complexity, Swag_recpt_name, Swag_recpt_creation_failed, Swag_recpt_status_code, Swag_diss_creation_passed, Swag_sub_proj_creation_passed, Swag_fsq_filename_syntax, Swag_fsq_filename_substr, Swag_fsq_filename_complex, Swag_encoding, Swag_delimiter, Swag_file_type, Swag_delivery_type, Swag_path, Swag_host, Swag_port, Swag_username, Swag_password, Swag_recpt_count, Swag_UnZip, Swag_schedules, Swag_hour, Swag_minute, Swag_days, Swag_alternative_email, Swag_sender_email, Swag_include_attachment, Swag_time
-        log_message("disabling feed")
-        url = f"https://datafeeds.fefundinfo.com/api/v1/Feeds/{input_feed_id}/disable"
-        headers = {
-            'accept': 'application/json',
-            'Authorization': f'Bearer {token}',  # Replace YOUR_TOKEN with your actual token
-            'Content-Type': 'application/json',
-        }
-
-        try:
-            response = requests.post(url, headers=headers)
-
-            if response.status_code == 200:
-                response_text = json.dumps(response.json(), indent=4)  # Format JSON output
-                data = json.loads(response_text)
-            else:
-                log_message(f"Request failed with status code {response.status_code}: {response.text}")
-        except Exception as e:
-            logging.exception("An error occurred in Bearer Token: %s", e)
-            log_message(e)
-            Swag_project_guid = 0
-
     header_sub_id = "Sub_ID"
     header_dump_type = "Dump_Type"
     header_perm_cont_id = "Perm_Cont_ID"
@@ -507,6 +485,8 @@ def Script_Run():
     tracker_sender_email_match = "Sender_Email_Match"
     tracker_include_attachment_match = "Include_Attachment_Match"
     tracker_status = "Status"
+    tracker_fsq_recpt_count = "FSQ_Recpt_Count"
+    tracker_efs_recpt_count = "EFS_Recpt_Count"
 
     tracker_idx_sub_id = get_tracker_index_by_header(tracker_sub_id)
     tracker_idx_feed_type = get_tracker_index_by_header(tracker_feed_type)
@@ -538,6 +518,9 @@ def Script_Run():
     tracker_idx_sender_email_match = get_tracker_index_by_header(tracker_sender_email_match)
     tracker_idx_include_attachment_match = get_tracker_index_by_header(tracker_include_attachment_match)
     tracker_idx_status = get_tracker_index_by_header(tracker_status)
+    tracker_idx_fsq_recpt_count = get_tracker_index_by_header(tracker_fsq_recpt_count)
+    tracker_idx_efs_recpt_count = get_tracker_index_by_header(tracker_efs_recpt_count)
+
 
     token = get_EFS_bearer_token()
     diss_token = get_Diss_bearer_token()
@@ -547,6 +530,7 @@ def Script_Run():
     for row in range(2, ws.max_row + 1):
         cell_status = ws.cell(row=row, column=col_idx_status)
         if cell_status.value is None or cell_status.value == '':
+        # if cell_status.value == 'Recheck':
             if run_count == counter:
                 break
             run_count += 1
@@ -626,6 +610,9 @@ def Script_Run():
             Tracker_include_attachment_match_value = wst.cell(row=track_row,
                                                               column=tracker_idx_include_attachment_match)
             Tracker_status_value = wst.cell(row=track_row, column=tracker_idx_status)
+            Tracker_fsq_recpt_count_value = wst.cell(track_row, column=tracker_idx_fsq_recpt_count)
+            Tracker_efs_recpt_count_value = wst.cell(track_row, column=tracker_idx_efs_recpt_count)
+
 
             if cell_fsq_filename_syntax.startswith('<?xml'):
                 root = ET.fromstring(cell_fsq_filename_syntax)
@@ -789,13 +776,11 @@ def Script_Run():
             search_term_build = f'FSQ-{cell_sub_id}'
             log_message(f"Running Sub ID: {cell_sub_id}")
             Search_Feed(cell_feed_type, search_term_build)
-            Run_Status = Trigger_FSQ_Diss(Swag_feed_id, cell_sub_id)
-            log_message(f'Run Status: {Run_Status}')
+            # Run_Status = Trigger_FSQ_Diss(Swag_feed_id, cell_sub_id)
+            # log_message(f'Run Status: {Run_Status}')
             Get_Feed_Details(Swag_feed_id)
             Get_Diss_Details(Swag_feed_id)
             Get_recpt_count(Swag_project_guid, Swag_perm_cont_id, diss_token)
-            if Swag_delivery_type in (2, 1):
-                Disable_Feed(Swag_feed_id)
             # API CALLS END HERE
 
             if Swag_schedules != 0:
@@ -924,14 +909,21 @@ def Script_Run():
             if flag == 0:
                 for heading, cell_value, swag_value, tracker in trackers1:
                     if cell_value != swag_value:
-                        tracker.value = "False"
                         if heading == "file_type" and (cell_value == "txt" or cell_value == "pdf"):
                             tracker.value = "True"
+                            continue
                         else:
-                            key_chain = data_mappings1[heading]
-                            if heading in ['compressed', 'include_attachment']:
-                                cell_value = convert_to_bool(cell_value)
-                            set_nested_value(feed_details_global, key_chain, cell_value)
+                            tracker.value = "False"
+                            all_true = False
+                        if heading == "recpt_count":
+                            Tracker_fsq_recpt_count_value.value = cell_value
+                            Tracker_efs_recpt_count_value.value = swag_value
+
+                        else:
+                            # key_chain = data_mappings1[heading]
+                            # if heading in ['compressed', 'include_attachment']:
+                            #     cell_value = convert_to_bool(cell_value)
+                            # set_nested_value(feed_details_global, key_chain, cell_value)
                             all_true = False
                     else:
                         tracker.value = "True"
@@ -941,14 +933,20 @@ def Script_Run():
                 print("Exe Flag 1")
                 for heading, cell_value, swag_value, tracker in trackers2:
                     if cell_value != swag_value:
-                        tracker.value = "False"
                         if heading == "file_type" and (cell_value == "txt" or cell_value == "pdf"):
                             tracker.value = "True"
+                            continue
                         else:
-                            key_chain = data_mappings2[heading]
-                            if heading in ['compressed', 'include_attachment']:
-                                cell_value = convert_to_bool(cell_value)
-                            set_nested_value(feed_details_global, key_chain, cell_value)
+                            tracker.value = "False"
+                            all_true = False
+                        if heading == "recpt_count":
+                            Tracker_fsq_recpt_count_value.value = cell_value
+                            Tracker_efs_recpt_count_value.value = swag_value
+                        else:
+                            # key_chain = data_mappings2[heading]
+                            # if heading in ['compressed', 'include_attachment']:
+                            #     cell_value = convert_to_bool(cell_value)
+                            # set_nested_value(feed_details_global, key_chain, cell_value)
                             all_true = False
                     else:
                         tracker.value = "True"
@@ -962,20 +960,20 @@ def Script_Run():
             print("=====================================================")
             feed_details_global = feed_details_global["payload"]
             if not all_true:
-                print("Rewriting Feed")
-                feed_details_global["deliverySettings"]["emailNotification"] = True
-                feed_details_global["deliverySettings"]["useAlternateEmailAddress"] = True
-                feed_details_global["deliverySettings"]["alternateEmailConsent"] = True
-                feed_details_global["deliverySettings"]["emailAddress"] = "efsdelivery@fefundinfo.com"
-                Save_Feed(feed_details_global)
-                #time.sleep(2)
-                log_message("Saving Feed - Please wait")
-                #time.sleep(2)
-                print("Validating Save ...")
-                #time.sleep(2)
-                print(f'Save Status Response API : {Save_Status}')
-                #time.sleep(2)
-                # HERE
+                # print("Rewriting Feed")
+                # feed_details_global["deliverySettings"]["emailNotification"] = True
+                # feed_details_global["deliverySettings"]["useAlternateEmailAddress"] = True
+                # feed_details_global["deliverySettings"]["alternateEmailConsent"] = True
+                # feed_details_global["deliverySettings"]["emailAddress"] = "efsdelivery@fefundinfo.com"
+                # Save_Feed(feed_details_global)
+                # #time.sleep(2)
+                # log_message("Saving Feed - Please wait")
+                # #time.sleep(2)
+                # print("Validating Save ...")
+                # #time.sleep(2)
+                # print(f'Save Status Response API : {Save_Status}')
+                # #time.sleep(2)
+                # # HERE
                 track_row += 1
                 Tracker_status_value.value = "Error"
                 wbt.save(TRACKER)

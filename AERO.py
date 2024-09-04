@@ -12,7 +12,7 @@ import tkinter as tk
 import uuid
 import webbrowser
 from datetime import datetime, timedelta
-
+import datetime
 import pandas as pd
 import requests
 
@@ -818,23 +818,7 @@ def compile_trinity():
                                 writer.writerow([isin])  # Write each ISIN
                         else:
                             print(f'Excluded - ISIN is not valid: {isin}')
-        # List all files in the source directory
-        log_message('CONSTRUCTING ARCHIVE')
-        current_date = datetime.datetime.now()
-        # Format the date to dd-mm-yyyy
-        formatted_date = current_date.strftime("%d-%m-%Y")
-        files = os.listdir(PREP_PREP_FILES)
-        os.chdir(ARCHIVE)
-        os.mkdir(formatted_date)
-        destination_dir = os.path.join(ARCHIVE, formatted_date)
-        # Copy each file to the destination directory
-        for file in files:
-            src_file_path = os.path.join(PREP_PREP_FILES, file)
-            dest_file_path = os.path.join(destination_dir, file)
-            # Check if it's a file and not a directory
-            if os.path.isfile(src_file_path):
-                shutil.copy(src_file_path, dest_file_path)
-        log_message('ARCHIVE IS SAVED')
+
     except Exception as e:
         logging.exception("An error occurred: %s", e)
         log_message(e)
@@ -843,13 +827,31 @@ def compile_trinity():
 
 
 def teams_trigger():
-    log_message('POPULATING DATA ENTRY TABLE')
+
     global UPLOAD, folder_paths, delete_folder_paths, user_path, BF, PROD, ARCHIVE, EXCEL, AIM, \
         CT, PREP, \
         PREP_PREP_DCR_BANKDATA, PREP_PREP_DCR_CARNEGIE, PREP_PREP_DCR_DANSKEBANK, \
         PREP_PREP_DCR_SDC, PREP_PREP_FILES, PREP_PREP_Team_Trigger, \
         PROD_PROD_DCR_BANKDATA, PROD_PROD_DCR_CARNEGIE, PROD_PROD_DCR_DANSKEBANK, \
         PROD_PROD_DCR_SDC, PROD_PROD_FILES, PROD_PROD_Team_Trigger, TRINITY, DCR_file_list, DCR_Folder_Paths
+    # List all files in the source directory
+    log_message('CONSTRUCTING ARCHIVE')
+    current_date = datetime.datetime.now()
+    # Format the date to dd-mm-yyyy
+    formatted_date = current_date.strftime("%d-%m-%Y")
+    files = os.listdir(PREP_PREP_FILES)
+    os.chdir(ARCHIVE)
+    os.mkdir(formatted_date)
+    destination_dir = os.path.join(ARCHIVE, formatted_date)
+    # Copy each file to the destination directory
+    for file in files:
+        src_file_path = os.path.join(PREP_PREP_FILES, file)
+        dest_file_path = os.path.join(destination_dir, file)
+        # Check if it's a file and not a directory
+        if os.path.isfile(src_file_path):
+            shutil.copy(src_file_path, dest_file_path)
+    log_message('ARCHIVE IS SAVED')
+    log_message('POPULATING DATA ENTRY TABLE')
     current_date = datetime.datetime.now()
     minus_1 = current_date - timedelta(days=1)
     minus_3 = current_date - timedelta(days=3)
